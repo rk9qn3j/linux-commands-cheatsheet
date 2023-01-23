@@ -868,3 +868,10 @@ cat /etc/passwd | grep YOURUSERNAME
 ```
 cat /etc/shells
 ```
+
+## Logs
+Successful and non-successful login attempts:
+```
+/var/log/auth.log       # Debian/Ubuntu
+         secure.log     # Red Hat/CentOS
+```
