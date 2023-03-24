@@ -42,6 +42,10 @@ usermod -G -a USER
 /etc/groups = groups
 /etc/shadow = users password
 
+**Set shell for user**
+usermod -s /sbin/nologin USER       # When the user tries to login, it will be politely told that a user doesn't have a shell
+usermod -s /bin/false USER      # When the user tries to login, the connection will immediately drop
+
 **Default user parameters**
 /etc/login.defs
 
@@ -415,24 +419,6 @@ nmtui = ncurses editor for NetworkManager
 
 at?
 
-**Performance tuning
-
-
-
-**List tuned profiles**
-```tuned-adm list```
-
-**View current tuned profile active**
-```tuned-adm active```
-
-**Active tuned profile**
-```tuned-adm profile powersave```
-
-**Disable tuned profile**
-```tuned-adm off```
-
-**Get tuned profile recommendation**
-```tuned-adm recommend```
 
 
 **Set process priority**
@@ -875,3 +861,78 @@ Successful and non-successful login attempts:
 /var/log/auth.log       # Debian/Ubuntu
          secure.log     # Red Hat/CentOS
 ```
+
+## Configure network
+### Red Hat
+```
+General
+nmcli con show PROFILENAME  # Display settings from profile
+nmcli con up INTERFACE      # Load new settings from profile
+
+IPv4
+nmcli con mod INTERFACE ipv4.addresses IPADDRESS/XX,IPADDRESS/XX        # Primary (or seconday IP address)
+nmcli con mod INTERFACE ipv4.gateway IPADDRESS      # Sets gateway
+nmcli con mod INTERFACE ipv4.dns IPADDRESS,IPADDRESS        # Sets DNS servers
+nmcli con mod INTERFACE ipv4.dns-search DOMAIN      # Sets search domain aka. DNS suffix
+nmcli con mod INTERFACE ipv4.method manual      # Set either static (manual) IP address or a address from DHCP (auto).
+
+IPv6
+nmcli con mod INTERFACE ipv6.addresses IPADDRESS/XX,IPADDRESS/XX        # Primary (or seconday IP address)
+nmcli con mod INTERFACE ipv6.dns IPADDRESS,IPADDRESS        # Sets DNS servers
+nmcli con mod INTERFACE ipv6.dns-search DOMAIN     # Sets search domain aka. DNS suffix
+nmcli con mod INTERFACE ipv6.method manual      # Set either static (manual) IP address, a address from DHCP (auto) or disabled.
+
+OR
+
+Use nmtui
+```
+
+## Advanced networking
+### IP forwarding
+```
+sysctl -w net.ipv4.ip_forward=1
+
+Permanent save
+1. Edit /etc/sysctl.conf
+2. Add net.ipv4.ip_forward = 0
+3. sysctl -p /etc/sysctl.conf 
+```
+
+
+## Logging
+```
+logger -s "Message"     # Logs to syslog
+```
+
+## Boot options
+```
+systemctl get-default                       # Get current setting
+systemctl set-default graphical.target      # Set to GUI
+systemctl set-default multi-user.target     # Set to CLI
+```
+
+## Scheduling
+### Cron
+
+**Allow or disallow access to crontab**
+```
+echo USER >>/etc/cron.allow      # Allow specific user(s) to use crontab
+echo ALL >>/etc/cron.deny       # Deny all users from using crontab except those in cron.allow
+```
+
+## Performance tuning
+### Tuned
+**List tuned profiles**
+```tuned-adm list```
+
+**View current tuned profile active**
+```tuned-adm active```
+
+**Active tuned profile**
+```tuned-adm profile powersave```
+
+**Disable tuned profile**
+```tuned-adm off```
+
+**Get tuned profile recommendation**
+```tuned-adm recommend```
