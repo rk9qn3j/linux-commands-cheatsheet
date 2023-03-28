@@ -46,6 +46,11 @@ usermod -G -a USER
 usermod -s /sbin/nologin USER       # When the user tries to login, it will be politely told that a user doesn't have a shell
 usermod -s /bin/false USER      # When the user tries to login, the connection will immediately drop
 
+**Get ID of user and group
+´´´
+id USER
+´´´
+
 **Default user parameters**
 /etc/login.defs
 
@@ -53,6 +58,11 @@ PASS_MAX_DAYS = 99999
 PASS_MIN_DAYS = 0
 PASS_MIN_LEN = 5
 PASS_WARN_AGE = 7
+
+**Change password requirements**
+```
+/etc/security/pwquality.conf
+```
 
 **set parameters around password for user**
 ```chage -m mindays -M maxdays -d lastday -I -E expiredate -W warndays USER```
@@ -347,15 +357,14 @@ rpm -qi --last
 
 **Compress and extract files**
 ```
-tar cvf FILE.TAR ~
-tar xvf FILE.TAR
+tar -cvf FILE.TAR ~     # Create an archive from file/folder
+tar -xvf FILE.TAR       # Extract an archive
 
-gzip FILE.TAR
-unzip FILE.TAR.GZ
+tar -cvzf FILE.TAR.GZ ~     # Create an gzip compress archive from file/folder
+tar -xvzf FILE.TAR.GZ       # Extract an gzip compress archive
 
-tar czvf FILE.TAR ~
-tar xzvf FILE.TAR
-
+tar -cvjf FILE.TAR.BZ2 ~    # Create an bz2 compress archive from file/folder
+tar -xvjf FILE.TAR.BZ2      # Extract an bz2 compress archive
 
 zip --password MY_SECRET secure.zip file1 file2 file3
 unzip secure.zip
@@ -415,10 +424,6 @@ nmtui = ncurses editor for NetworkManager
 /etc/hostname = hostname for machine
 /etc/resolve.conf = DNS server for name resolving
 /etc/nsswitch.conf = order for name lookup
-
-
-at?
-
 
 
 **Set process priority**
@@ -622,28 +627,26 @@ ls -al /lib/systemd/system/runlevel*
 **Set target on system
 systemctl set-default graphical.target
 
-**Reset root password
+**Reset root password on Red Hat (SELinux enabled)
 edit GRUB using e key
-After the /swap type:
+replace "quiet" with "rd.break" under Linux
 rd.break
 ctrl+x
 mount -o remount,rw /sysroot
 chroot /sysroot
 passwd root
+touch /.autorelabel
 exit
 exit
 
-**Reset root password (SELinux enabled)
+**Reset root password on Ubuntu
 edit GRUB using e key
 After the /swap type:
-rd.break enforcing=0
+replace "ro quiet splash $vt_handoff” with “rw init=/bin/bash” under Linux
 ctrl+x
-mount -o remount,rw /sysroot
-chroot /sysroot
+mount | grep -w /
 passwd root
-touch ./autorelabel
-exit
-exit
+REBOOT
 
 ## Firewalls
 **Overview**
@@ -884,18 +887,20 @@ nmcli con mod INTERFACE ipv6.method manual      # Set either static (manual) IP 
 
 OR
 
-Use nmtui
+Use nmtui 😉
 ```
 
 ## Advanced networking
 ### IP forwarding
 ```
-sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv4.ip_forward=1 OR net.ipv6.conf.all.forwarding = 1
 
 Permanent save
 1. Edit /etc/sysctl.conf
-2. Add net.ipv4.ip_forward = 0
+2. Add net.ipv4.ip_forward = 1
 3. sysctl -p /etc/sysctl.conf 
+
+
 ```
 
 
@@ -904,21 +909,39 @@ Permanent save
 logger -s "Message"     # Logs to syslog
 ```
 
-## Boot options
-```
-systemctl get-default                       # Get current setting
-systemctl set-default graphical.target      # Set to GUI
-systemctl set-default multi-user.target     # Set to CLI
-```
+
 
 ## Scheduling
 ### Cron
 
 **Allow or disallow access to crontab**
+> Based on existence of /etc/cron.allow and /etc/cron.deny, user is allowed or denied to edit the crontab in below sequence.
+> 
+>     If cron.allow exists - only users listed into it can use crontab
+>     If cron.allow does not exist - all users except the users listed into cron.deny can use crontab
+>     If neither of the file exists - only the root can use crontab
+>     If a user is listed in both cron.allow and cron.deny - that user can use crontab.
+> 
+
+source: https://www.thegeeksearch.com/how-cron-allow-and-cron-deny-can-be-user-to-limit-access-to-crontab-for-a-particular-user/
+
 ```
 echo USER >>/etc/cron.allow      # Allow specific user(s) to use crontab
 echo ALL >>/etc/cron.deny       # Deny all users from using crontab except those in cron.allow
 ```
+
+### At
+**Enable or disable the atd service**
+```
+systemctl status atd
+```
+
+**Allow or disallow access to at**
+```
+echo USER >>/etc/at.allow      # Allow specific user(s) to use at
+echo ALL >>/etc/at.deny       # Deny all users from using at except those in at.allow
+```
+
 
 ## Performance tuning
 ### Tuned
@@ -936,3 +959,40 @@ echo ALL >>/etc/cron.deny       # Deny all users from using crontab except those
 
 **Get tuned profile recommendation**
 ```tuned-adm recommend```
+
+## Storage
+### Generic
+```
+lsblk       # List block devices
+blkid       # List UUID for block devices
+```
+
+### Mounting
+```
+mount -o loop /PATH/TO/ISO /MOUNTPATH           # Mount a ISO image on desired path
+mount -a                                        # Remount all entries in /etc/fstab
+```
+
+### LVM
+```
+vgcreate NAMEOFVOLUMEGROUP /dev/BLOCKDEVICE                                     # Create new VG on block device - a PV is automatically created 
+lvcreate NAMEOFVOLUMEGROUP --name NAMEOFLOGICALVOLUME --size 50GB               # Create new LV with 50 GB size
+lvresize /dev/mapper/NAMEOFVOLUMEGROUP-NAMEOFLOGICALVOLUME --size 100GB         # Resize LV to new size - add -r to resize underlaying file system
+mkfs.ext4 /dev/mapper/NAMEOFVOLUMEGROUP-NAMEOFLOGICALVOLUME                     # Create a ext4 file system on the new LV
+mkfs.xfs /dev/mapper/NAMEOFVOLUMEGROUP-NAMEOFLOGICALVOLUME                      # Create a xfs file system on the new LV
+resize2fs /dev/mapper/NAMEOFVOLUMEGROUP-NAMEOFLOGICALVOLUME                     # Resize underlaying file system
+```
+
+## Boot
+### Boot options
+```
+systemctl get-default                       # Get current setting
+systemctl set-default graphical.target      # Set to GUI
+systemctl set-default multi-user.target     # Set to CLI
+```
+
+### Grub2
+```
+grub2-mkconfig -o /boot/grub2/grub.cfg
+```
+
