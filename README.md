@@ -677,79 +677,6 @@ iptabels -F
 
 
 
-**firewalld
-#**List all firewalld rules
-```
-firewall-cmd --list-all
-```
-#**List all firewalld appliable services rules
-```
-firewall-cmd --get-services
-```
-
-#**Reload firewall rules
-```
-firewall-cmd --reload
-```
-
-#**List firewalld zones
-```
-firewall-cmd --get-zones
-```
-
-#**Check current firewalld zone
-```
-firewall-cmd --get-active-zone
-```
-
-#**List rules for zone public
-```
-firewall-cmd --zone=public --list-all
-```
-
-#**Add custom service to firewalld
-```
-Copy any XML file under /usr/lib/firewalld/services/ and modify it.
-systemctl restart firewalld
-firewall-cmd --get-services
-firewall-cmd --add-service=XX
-```
-
-#**Add service to the firewall
-```
-firewall-cmd --add-service=http --permanent
-```
-
-#**Add port to the firewall
-```
-firewall-cmd --add-port=80/tcp --permanent
-```
-
-#**Remove service to the firewall
-```
-firewall-cmd --remove-service=http --permanent
-```
-
-#**Remove port to the firewall
-```
-firewall-cmd --remove-port=80/tcp --permanent
-```
-
-#**Reject incomming traffic from IP
-```
-firewall-cmd --add-rich-rule='rule family="ipv4" source address="192.168.0.2" reject'
-```
-#**Block or unblock ICMP
-```
-firewall-cmd --add-icmp-block-inversion
-firewall-cmd --remove-icmp-block-inversion
-```
-
-#**Block outgoing trafic
-```
-firewall-cmd --direct --add-rule ipv4 filter OUTPUT 0 -d 31.13.71.36 -j DROP    
-```
-
 # Containers
 ```
 dnf install podman
@@ -865,8 +792,8 @@ Successful and non-successful login attempts:
          secure.log     # Red Hat/CentOS
 ```
 
-## Configure network
-### Red Hat
+## Network
+### Configure network (Red Hat)
 ```
 General
 nmcli con show PROFILENAME  # Display settings from profile
@@ -890,9 +817,40 @@ OR
 Use nmtui 😉
 ```
 
+## Firewall
+### Configure firewall (Red Hat)
+```
+firewall-cmd --list-all                             # List all firewall rules
+firewall-cmd --get-zones                            # List firewall zones
+
+firewall-cmd --get-active-zone                      # Check current firewall zone
+firewall-cmd --zone=public --list-all               # List all firewall rules for the public zone
+
+firewall-cmd --get-services                         # List all firewall appliable services rules
+firewall-cmd --add-service=http --permanent         # Add service to the firewall
+firewall-cmd --remove-service=http --permanent      # Remove service to the firewall
+firewall-cmd --add-port=80/tcp --permanent          # Add port to the firewall
+firewall-cmd --remove-port=80/tcp --permanent       # Remove port to the firewall
+firewall-cmd --add-icmp-block-inversion             # Block ICMP (ping)
+firewall-cmd --remove-icmp-block-inversion          # Allow ICMP (ping)
+
+firewall-cmd --reload                               # Reload firewall rules
+firewall-cmd --complete-reload                      # Reload the firewall service, which also terminate active connections
+firewall-cmd --runtime-to-permanent                 # Make current configuration permanent
+```
+
+### Advanced firewall (Red Hat)
+**Add custom service to firewalld**
+1. Copy any XML file under /usr/lib/firewalld/services/ and modify it.
+2. Restart the firewall:
+> systemctl restart firewalld
+3. List all services - you should find you newly added service:
+> firewall-cmd --get-services
+4. Add the service as a rule to the firewall and save it permanently:
+> firewall-cmd --add-service=XX --permanent
+
 ## Advanced networking
 ### IP forwarding
-```
 sysctl -w net.ipv4.ip_forward=1 OR net.ipv6.conf.all.forwarding = 1
 
 Permanent save
