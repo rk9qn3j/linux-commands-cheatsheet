@@ -382,6 +382,9 @@ netstat -nat # Show all current TCP connections
 **FTP
 ```yum install vsftpd```
 
+# Find something (case insensitive) and supress permission issues
+find / -iname nanorc 2>/dev/null
+
 # Do something with results
 ```find -iname nanorc | xargs cat```
 
