@@ -191,6 +191,8 @@ dmesg
 ```tail -f FILE```
 
 
+**Search input file for regex matches (in this case for a MAC address) and output matches and their respective line numbers**
+cat FILE | grep -n -i [0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]:[0-9a-f][0-9a-f]
 
 
 
