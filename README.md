@@ -35,8 +35,14 @@ groupadd GROUP
 **Delete group**
 groupdel GROUP
 
-**Modify user**
-usermod -G -a USER
+**Add or remove user from group**
+```
+usermod -G -a user group                    # Adds the user to the group
+usermod -G -r user group
+
+gpasswd -a user group                       # Remove the user from the group
+gpasswd -d user group
+```
 
 /etc/passwd = users
 /etc/groups = groups
