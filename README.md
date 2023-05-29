@@ -176,7 +176,9 @@ systemctl --all
 **Enable or disable service completely**
 ```systecmctl mask/unmask application.service```
 
-
+# Misc
+**Download output from URL**
+wget -O FILE URL                    # Download output as file from URL
 
 /var/log/boot - Boot evetns
 /var/log/messages - All events
@@ -856,15 +858,16 @@ firewall-cmd --runtime-to-permanent                 # Make current configuration
 
 ## Advanced networking
 ### IP forwarding
+```
 sysctl -w net.ipv4.ip_forward=1 OR net.ipv6.conf.all.forwarding = 1
-
+```
 Permanent save
 1. Edit /etc/sysctl.conf
 2. Add net.ipv4.ip_forward = 1
 3. sysctl -p /etc/sysctl.conf 
 
 
-```
+
 
 
 ## Logging
@@ -928,6 +931,11 @@ echo ALL >>/etc/at.deny       # Deny all users from using at except those in at.
 ```
 lsblk       # List block devices
 blkid       # List UUID for block devices
+```
+
+### SWAP
+```
+swapoff -a                                      # Disable all SWAP devices
 ```
 
 ### Mounting
