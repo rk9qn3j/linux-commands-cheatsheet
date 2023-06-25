@@ -1013,3 +1013,13 @@ systemctl set-default multi-user.target     # Set to CLI
 grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
 
+## Git
+**Revert last commit without removing any changes**
+```
+git reset --soft HEAD~1
+```
+
+**Change commit author**
+```
+git commit --amend --reset-author
+```
