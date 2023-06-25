@@ -183,8 +183,43 @@ systemctl --all
 ```systecmctl mask/unmask application.service```
 
 # Misc
+**Verify checksum of file**
+```
+echo checksum file | sha256sum -c
+
+OR
+
+echo $(cat checksumfile) file | sha256sum -c
+```
+
+**Calculate checksum of multiple files**
+```
+find . -type f -exec sha256sum {} \;                # Calculate checksum of files in the current directory.
+
+OR
+
+find /etc -type f -exec sha256sum {} \;             # Calculate checksum of files in a specific directory.
+
+```
+**List how many matches a grep results in**
+```
+cat file | grep string | wc -l
+```
+
+**Grep this OR that**
+```
+grep -E "this|that"
+```
+
+**List unique lines**
+```
+cat file | uniq
+```
+
 **Download output from URL**
-wget -O FILE URL                    # Download output as file from URL
+```
+wget -O FILE URL                # Download output as file from URL
+```
 
 /var/log/boot - Boot evetns
 /var/log/messages - All events
@@ -192,6 +227,11 @@ wget -O FILE URL                    # Download output as file from URL
 /var/log/cron - Cron events
 /var/log/maillog - SMTP events
 
+# Vim
+**List newline**
+```
+:set list
+```
 
 dmesg
 
