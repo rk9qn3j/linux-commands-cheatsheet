@@ -323,8 +323,7 @@ Port 2222
 
 -> systemctl restart sshd
 
-**Copy you keys to a remote computer
-ssh-copy-id USER@192.168.1.120 -i .ssh/id_rsa.pub
+
 
 
 ##**Analyze servers and get support
@@ -1022,4 +1021,19 @@ git reset --soft HEAD~1
 **Change commit author**
 ```
 git commit --amend --reset-author
+```
+
+## SSH
+**Generate new keys
+```
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -C "comment"
+
+OR
+
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "comment"
+```
+
+**Copy you keys to a remote computer**
+```
+ssh-copy-id USER@192.168.1.120 -i .ssh/id_rsa.pub
 ```
