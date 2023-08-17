@@ -911,16 +911,16 @@ Permanent save
 2. Add net.ipv4.ip_forward = 1
 3. sysctl -p /etc/sysctl.conf 
 
-
-
-
-
 ## Logging
+**Log a specific message to system log files**
 ```
-logger -s "Message"     # Logs to syslog
+$ logger -s "Message"     
 ```
 
-
+**Log a specific message to Kernel log buffer (useful for dmesg debugging)**
+```
+# echo "Message" >> /dev/kmsg
+```
 
 ## Scheduling
 ### Cron
@@ -1016,11 +1016,39 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 **Revert last commit without removing any changes**
 ```
 git reset --soft HEAD~1
+
+OR
+
+git reset --soft <hash of commit>
+```
+
+**Revert last commit and changes made since last commit (POTENTIALLY DANGEROUS!)**
+```
+git reset --hard HEAD~1
+
+OR
+
+git reset --hard <hash of commit>
+```
+
+**Remove unstaged files**
+```
+git reset @
+```
+
+**Force push**
+```
+git push --force
 ```
 
 **Change commit author**
 ```
 git commit --amend --reset-author
+```
+
+**Commit with comment**
+```
+git commit -m "Message"
 ```
 
 ## SSH
