@@ -1036,6 +1036,16 @@ git reset --hard <hash of commit>
 git reset @
 ```
 
+**Add all changes to staged**
+```
+git add *
+```
+
+**Add all changed to staged including deleted files**
+```
+git add --all
+```
+
 **Force push**
 ```
 git push --force
