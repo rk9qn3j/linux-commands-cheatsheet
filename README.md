@@ -403,6 +403,11 @@ rpm -qi --last
 **Check what executable is assiciatted with what package**
 ```rpm -qf PACKAGE/FULL PATH TO EXECUTABLE```
 
+**Rename all files ending with specific file extension in the current folder**
+```sh
+rename -vn currentname newname *.png      # Dry run
+rename -v currentname newname *.png       # Actually doing it
+```
 
 **Compress and extract files**
 ```
@@ -441,9 +446,20 @@ find / -iname nanorc 2>/dev/null
 # Block process termination
 ```nohup apt-get update```
 
+## Parsing
+### jq (or yq)
 
+**Return all items with the name property**
+```sh
+command | jq .[].name
+command | jq -r .[].name        # raw ouput
+```
 
-
+**Return the first item with the name property**
+```sh
+command | jq .[0].name
+command | jq -r .[0].name       # raw output
+```
 
 /etc/vsftpd/vsftpd.conf
 
@@ -1043,7 +1059,7 @@ git add *
 
 **Add all changed to staged including deleted files**
 ```
-git add --all
+git add --all .
 ```
 
 **Force push**
