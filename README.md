@@ -1,14 +1,32 @@
 # Linux Commmands Cheatsheet
+## To the reader
+> This cheatsheet was written with AlmaLinux 9 and Ubuntu 22.04 in mind, so some things may differ from the distribution that you are using.
+
+> Even though there are certain steps for enabling and starting services after some packages have been installed, this isn't always necessary on e.g. Ubuntu.
+
 ## Users and groups
+
+**Overview**
+```sh
+/etc/passwd             # Contains all user accounts
+/etc/groups             # Contains all groups
+/etc/shadow             # Contains all user accounts passwords
+
+/etc/login.defs                     # Defaults for new user accounts
+/etc/skel                           # Skeleton dir for new user accounts
+/etc/security/pwquality.conf        # System wide config file for password requirements
+```
+
 **Create user**
 ```sh
 useradd <username>
 useradd -r <username>           # Adds a system account (different UID)
 ```
 
-**Set or change a users password**
+**Set or change a user's password**
 ```sh
 passwd <username>
+echo "<username>:<password>" | chpasswd           # chpasswd can be used to batch update users password.
 ```
 
 **Check ID on user or group**
@@ -23,65 +41,74 @@ userdel -r <username>               # Deletes the user along with the home direc
 ```
 
 **Create group**
-groupadd GROUP
+```sh
+groupadd <group name>
+```
 
 **Delete group**
-groupdel GROUP
+```sh
+groupdel <group name>
+```
 
 **Add or remove user from group**
-```
-usermod -G -a user group                    # Adds the user to the group
+```sh
+usermod -a -G user group                    # Adds the user to the group
 gpasswd -a user group 
                       
 gpasswd -d user group                       # Remove the user from the group
 ```
 
-**Change password for user**
+**Disable or enable user**
 ```sh
-passwd <user>
-echo "<user>:password" | chpasswd
+usermod -l <username>           # Lock user account
+usermod -u <username>           # Unlock user account
 ```
-
-/etc/passwd = users
-/etc/groups = groups
-/etc/shadow = users password
 
 **Set shell for user**
 ```sh
 usermod -s /bin/sh                  # Set shell to Bourne shell
-usermod -s /sbin/nologin USER       # When the user tries to login, it will be politely told that a user doesn't have a shell
-usermod -s /bin/false USER      # When the user tries to login, the connection will immediately drop
+usermod -s /sbin/nologin <username>       # When the user tries to login, it will be politely told that a user doesn't have a shell
+usermod -s /bin/false <username>      # When the user tries to login, the connection will immediately drop
 ```
 
-**Default user parameters**
-/etc/login.defs
-
-PASS_MAX_DAYS = 99999
-PASS_MIN_DAYS = 0
-PASS_MIN_LEN = 5
-PASS_WARN_AGE = 7
-
-**Change password requirements**
+**set password parameters for user**
+```sh
+chage -m mindays -M maxdays -d lastday -I -E expiredate -W warndays <username>
 ```
-/etc/security/pwquality.conf
-```
-
-**set parameters around password for user**
-```chage -m mindays -M maxdays -d lastday -I -E expiredate -W warndays USER```
 
 **Become root**
-```su -```
+```sh
+su -
+```
 
-**Elevate yourself in interactive mode**
-```sudo -i```
+**Run a command with sudo**
+```sh
+sudo <command>
+```
 
-**change user**
-```su USER```
+**Run sudo in interactive mode**
+```sh
+sudo -i
+```
 
-**run a command through sudo**
-```sudo COMMAND```
+**Become another user and change to their home directory**
+```sh
+su - <username>
+```
+
+**Add user to admin**
+```sh
+usermod -a -G sudo <username>               # For Debian based OS
+usermod -a -G wheel <username>              # For Red Hat based OS
+```
+
+**Don't require password for sudo**
+1. Run `visudo`.
+2. Add `<username>   ALL=(ALL) NOPASSWD:ALL         # Gives user permission to run sudo without password.` under `# User privilege specification`. Replace `<username>` with desired user.
 
 ## Permissons
+
+### Permission fundamentals
 
 **List all files with tmp**
 ```ls -l tmp```
@@ -121,14 +148,7 @@ then
 fi
 ```
 
-**Read file line by line**
-```sh
-file=$(cat <file>)
-for i in $file
-do
-    echo $i
-done
-```
+
 
 **Change owner or group recursive**
 ```
@@ -151,16 +171,49 @@ chgrp -R GROUP
 **Output all network interface to file
 ```tcpdump -i INTERFACE > FILE```
 
-**Move hidden files
-#**Zsh
+**Move/Copy hidden files (Zsh)**
+```sh
 setopt glob_dots
 mv Foo/* Bar/
 unsetopt glob_dots
+```
 
-#**Bash
+**Move/Copy hidden files (Bash)**
+```sh
 shopt -s dotglob
 mv Foo/* Bar/
 shopt -u dotglob
+```
+
+### SetUID, SetGID and Sticky bit
+
+**Overview**
+```sh
+rwsrwxrwx   mark marketing          # if we run the executable, it will run as user mark
+rwxrwsrwx   mark marketing          # if we run the executable, it will run as group marketing
+rwxrwsrwx   mark marketing          # if it's an directory, all file placed within the directory will have marketing as owner
+
+rwx-rwxrwT                          # others can't execute
+rwx-rwxrwt                          # others can execute
+```
+
+**Enable or disable SetUID**
+```sh
+chmod u+s
+chmod u-s
+```
+
+**Enable or disable SetGID**
+```sh
+chmod g+s
+chmod g-s
+```
+
+**Enable or disable Sticky bit**
+```sh
+chmod g+s
+chmod g-s
+```
 
 ### ACL
 
@@ -211,8 +264,6 @@ pkill -9 <process name>
 killall -s 9 apache2
 ```
 
-systecmctl --version
-
 
 systemctl --all
 
@@ -228,6 +279,11 @@ systemctl --all
 
 **Enable or disable service completely**
 ```systecmctl mask/unmask application.service```
+
+**Search for specific service**
+```sh
+systemctl list-units --no-pager | grep -i <search term>
+```
 
 ## Misc
 **Verify checksum of file**
@@ -268,11 +324,6 @@ cat file | uniq
 wget -O FILE URL                # Download output as file from URL
 ```
 
-/var/log/boot - Boot evetns
-/var/log/messages - All events
-/var/log/secure - Security events
-/var/log/cron - Cron events
-/var/log/maillog - SMTP events
 
 
 
@@ -319,6 +370,33 @@ date -s '2021-08-18 20:15:50'
 **Sync time with NTP
 ```timedatectl set-ntp true```
 
+### NTP
+**Install NTP client and server**
+```sh
+dnf install chrony ntpstat
+systemctl status chronyd
+```
+
+**Check current time lagging**
+```sh
+ntpstat
+```
+
+**Check current time servers ver**
+```sh
+chronyc sources -v
+```
+
+**Edit NTP server configuration**
+```sh
+vi /etc/chrony.conf
+systemctl restart chronyd
+```
+
+**Force time sync**
+```sh
+chronyc makestep
+```
 
 chronyd
 
@@ -558,47 +636,144 @@ System
     Highest priority = -99
     Lowest priority = 39
 
-**SELinux
+
+## SELinux
 ! Is default enabled in Redhat, CentOS and Fedora
 Enforcing = Enabled
 Permissive = Disable, but logs the activity
 Disable = Disable
 
 **Check SELinux status**
-```
+```sh
 sestatus
 getenforce
 ```
 
-**Change SELinux mode**
-```
+**Change SELinux mode temporary**
+```sh
 setenforce 0 = Permissive/Disable
 setenforce 1 = Enable
 ```
 
-**Configuration 
-/etc/selinux/config
+**Configuration**
+```sh
+vi /etc/selinux/config
+
 SELINUX=enforcing
+
 OR
+
 SELINUX=disable
+```
+
+**Before enabling SELinux, relabel filesystem**
+```sh
+touch /.autorelabel                 # May take a long time!
+```
+
+**List label of file**
+```sh
+ls -lZ FILE
+```
+
+**List label for process**
+```sh
+ps axZ | grep -i <process name>
+
+OR
+
+ps efZ | grep -i <process name>
+```
+
+**Change SELinux file type context**
+```sh
+chcon system_u:object_r:shadow_t:s0 /etc/shadow
+```
+
+**Restore file type context on folder recursive with verbose mode**
+```sh
+restorecon -Rv <path to folder>
+```
+
+**Change label on folder**
+```sh
+semanage fcontext -a -t <type context> "<path to directory or file(/.*)?" 
+```
+
+**List active SELinux fcontext type contexts**
+```sh
+semanage fcontext -l
+```
+
+**Remove SELinux type contexts**
+```sh
+semanage fcontext -d -t <type context> "<path to directory or file(/.*)?" 
+```
+
+**List SELinux port type contexts and grep for specific service**
+```sh
+semanage port -l | grep <service>
+```
+
+**Add SELinux port type context**
+```sh
+semanage port -a -t <type context> -p <protocol> <port>
+```
+
+**Modify SELinux port type context**
+```sh
+semanage port -m -t <type context> -p <protocol> <port>
+```
+
+**Modify SELinux port type context**
+```sh
+semanage port -d -t <type context> -p <protocol> <port>
+```
+
+**Show SELinux manuals**
+```sh
+man semanage-fcontext
+man semanage-port
+man semanage-boolean
+```
+
+**List SELinux port type contexts**
+```sh
+semanage port -l | grep <service>           # Take a note of the port type context for the service
+vi /etc/httpd/conf/httpd.conf
+semanage port -a -t httpd_port_t -p <protocol> <port>           # Replace -a with a -d to delete port.
+systemctl restart httpd
+```
+
+**List SELinux boolean**
+```sh
+semanage boolean -l
+semanage boolean -l | grep <search pattern>
+```
+
+**Set SELinux boolean**
+```sh
+setsebool <policy> <boolean>
+sestebool -P <policy> <boolean>      # The -P makes the change persistent across reboots.
+```
+
+**Troubleshooting SELinux**
+```sh
+dnf install setroubleshoot setools
+sealert -a /var/log/audit/audit.log
+```
 
 SELinux
     Labeling
 
-**List label of file
-```
-ls -lZ FILE
-```
+
 
 **List label of directory
 ```
 ls -dZ DIRECTORY
 ```
 
-**List label of process
-```
-ps axZ | grep PROCESS
-```
+
 
 **List label of socket
 ```
@@ -656,6 +831,11 @@ systemctl set-default graphical.target      # Normal desktop
 OR
 
 systemctl set-default multi-user.target     # No grapical interface
+```
+
+**Comment**
+```sh
+systemctl default                           # Directly get into default mode
 ```
 
 **Switch between consoles**
@@ -785,17 +965,22 @@ exiftool -All= *.jpg
 exittool -All= -overwrite_original *.png
 ```
 
-**Reset root password on Red Hat (SELinux enabled)
+**Reset root password on Red Hat (when SELinux enabled)**
+**Comment**
+```sh
 edit GRUB using e key
 replace "quiet" with "rd.break" under Linux
-rd.break
+init=/bin/bash
 ctrl+x
-mount -o remount,rw /sysroot
-chroot /sysroot
+mount -o remount,rw /sysroot OR /
+(chroot /sysroot)
+ls -lZ /etc/shadow
 passwd root
-touch /.autorelabel
-exit
-exit
+ls -lZ /etc/shadow
+chcon system_u:object_r:shadow_t:s0 /etc/shadow OR touch /.autorelabel)                                         # You can skip this step if SELinux is not enabled
+(exit)
+exec /sbin/init
+```
 
 **Reset root password on Ubuntu
 edit GRUB using e key
@@ -947,8 +1132,15 @@ cat /etc/shells
 
 ## Networking
 ### Configure network (Red Hat)
+**Change DNS resolution order**
+```sh
+vi /etc/nsswitch.conf
 ```
+
+```sh
 General
+man nmcli-examples
+
 nmcli con show PROFILENAME  # Display settings from profile
 nmcli con up INTERFACE      # Load new settings from profile
 
@@ -969,6 +1161,14 @@ OR
 
 Use nmtui 😉
 ```
+### WIFI
+**Scan and connect to WIFI**
+```sh
+nmcli device wifi list
+nmcli --ask device wifi connect "<SSID>"a
+```
+
+
 
 ## Advanced networking
 ### IP forwarding
@@ -1038,6 +1238,18 @@ firewall-cmd --runtime-to-permanent                 # Make current configuration
 
 
 ## Logging
+
+### System logs
+**System logs (RedHat)**
+```sh
+/var/log/boot # Boot events
+/var/log/chronyd # NTP events
+/var/log/messages # All events
+/var/log/secure # Security events
+/var/log/cron # Cron events
+/var/log/maillog # SMTP events
+```
+
 Successful and non-successful login attempts:
 ```
 /var/log/auth.log       # Debian/Ubuntu
@@ -1054,6 +1266,21 @@ $ logger -s "Message"
 # echo "Message" >> /dev/kmsg
 ```
 
+### Journal
+**See journal from last boot**
+```sh
+journalctl -b -1
+```
+
+**Activate persistent storage**
+```sh
+vi /etc/systemd/journald.conf
+Go to [Journal] and add line Storage=persistent
+mkdir /var/log/journal
+systemctl restart systemd-journald
+journalctl --flush
+```
+
 ## Scheduling
 ### Cron
 
@@ -1068,15 +1295,44 @@ $ logger -s "Message"
 
 source: https://www.thegeeksearch.com/how-cron-allow-and-cron-deny-can-be-user-to-limit-access-to-crontab-for-a-particular-user/
 
-```
+```sh
 echo USER >>/etc/cron.allow      # Allow specific user(s) to use crontab
 echo ALL >>/etc/cron.deny       # Deny all users from using crontab except those in cron.allow
 ```
 
-### At
-**Enable or disable the atd service**
+**List available options**
+```sh
+man 5 crontab
 ```
-systemctl status atd
+
+**Edit crontab for current user**
+```sh
+crontab -e
+```
+
+**Edit crontab for another user**
+```sh
+crontab -e -u <user>
+```
+
+**List crontab for current user**
+```sh
+crontab -l
+```
+
+
+### At
+**Schedule command to run at specific time**
+```sh
+<command> | at <time>
+<command> | at <time> <date>
+<command> | at now +1 hours            # Start specific command about 1 hour
+<command> | at <time> -M               # suppress email notification
+```
+
+**Enable or disable the atd service**
+```sh
+systemctl enable/disable atd
 ```
 
 **Allow or disallow access to at**
@@ -1160,6 +1416,12 @@ UUID=<uuid> <mount point>   <file system>   <defaults> <0> <0>
 ```sh
 e2fsck -f <device>
 ```
+
+**Interactive partitioning tool**
+```sh
+cfdisk <block device path>
+```
+
 ### SWAP
 ```
 swapoff -a                                      # Disable all SWAP devices
@@ -1169,6 +1431,7 @@ swapoff -a                                      # Disable all SWAP devices
 ```
 mount -o loop /PATH/TO/ISO /MOUNTPATH           # Mount a ISO image on desired path
 mount -a                                        # Remount all entries in /etc/fstab
+mount -o remount,rw /                           # Remount /
 ```
 
 ### LVM
@@ -1206,8 +1469,6 @@ pvremove <path to block device>
 lvresize <path to mapped device> -l +100%FREE -L +10GB
 ```
 
-
-
 1. create physical partition
 fdisk
 n
@@ -1235,36 +1496,95 @@ resize2fs                                           # xfs_growfs <path to device
 lvcreate -n data1_lv -l +100%FREE data1_vg
 #########################################################3
 
-Stratis
+### LVMVDO
+> The topic is written for Red Hat 9 in mind - some commands won't work!
+> You can use both /dev/device OR /dev/vg*/lv*/
+**Create **
+```sh
+vgs
+vgcreate <volume group name> <block device path>
+lvcreate --type vdo -n <logical volume name> -L <physical size> -V <logical size> <volume group> # Use exact size e.g. 20 GB
+lvcreate --type vdo -n <logical volume name> -l <physical size> -V <logical size> <volume group> # Use extent instead e.g. +100%FREE
+mkfs.ext4 -E nodiscard <path to volume>
+mkfs.xfs -K <path to volume>
+```
 
-! Uses thin provision as default
+**Show VDO stats**
+```sh
+lvs -olv_name,vdo_compression,vdo_deduplication
+vdostats --human-readable
+```
 
+**Change setting on vdo**
+```sh
+lvchange --compression n <path to volume>
+lvchange --deduplication y <path to volume>
+```
 
+### Stratis
+
+> Stratis volumes will always show 1 TB when eg. running df
+> Uses thin provision as default
+
+**Install Stratis**
+```sh
 dnf install stratis-cli stratisd
+systemctl enable stratisd --now
+```
 
+**Create Stratis pool**
+```sh
+stratis pool create <pool name> <block device>
+```
 
-stratis pool create pool1 /dev/sdc
-
+**List Stratis pools**
+```sh
 stratis pool list
+```
 
-stratis pool add-data pool1 /dev/sdd
-
-
-stratis filesystem create pool1 fs1
+**List Stratis filesystem**
+```sh
 stratis filesystem list
+```
 
-mkdir /data3
-mount /stratis/pool1/fs1 /data3
+**Create Stratis filesystem on pool**
+```sh
+stratis filesystem create <pool name> <filesystem name>
+```
+
+**Enable or disable overprovisioning**
+```sh
+stratis pool overprovision <yes OR no>
+```
+
+**Add more block devices to pool**
+```sh
+stratis pool add-data <pool name> <block device>
+```
+
+**Create snapshot of Stratis filesystem**
+```sh
+stratis filesystem snapshot <pool name> <filesystem name> <snapshot name>
+```
+
+**Remove snapshot of Stratis filesystem**
+```sh
+stratis filesystem destroy <pool name> <snapshot name>
+```
+
+**Mount**
+```sh
+mkdir -p <mount point>
+mount /dev/stratis/<pool name>/<filesystem name> <mount point>
+```
+
+**Mount (persistent)**
+```sh
+vi /etc/fstab
+UUID="<UUID>" <mount point> xfs defaults,x-systemd.requires=stratisd.service 0 0
+```
 
 
-! Stratis volumes will always show 1 TB when eg. running df
-
-**Create snapshot of filesystem
-stratis filesystem snapshot pool1 fs1 SNAPSHOTNAME
-
-Add to fstab
-/etc/fstab
-UUID="UUIDOFFILESYSTEM" /fs1 xfs defaults,x-systemd.requires=stratisd.service 0 0
 
 ## Boot
 ### Boot options
@@ -1275,8 +1595,53 @@ systemctl set-default multi-user.target     # Set to CLI
 ```
 
 ### Grub2
+**Access Grub during boot**
+```sh
+F8
+
+OR
+
+Pressing ESC during boot
+
+OR
+
+Holding SHIFT during boot
 ```
-grub2-mkconfig -o /boot/grub2/grub.cfg
+
+**Boot into a specific target**
+> Do not attempt to boot in to emergency or rescue mode without root password - you will be stuck otherwise.
+
+```sh
+Go into Grub menu during boot
+Press e to edit
+at the end of the linux line, type: systemd.unit=emergency.target
+Then CTRL+X to start
+```
+
+```sh
+cat /proc/cmdline
+
+vi /etc/default/grub
+grub2-mkconfig -o /boot/grub2/grub.cfg                # BIOS
+grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg       # UEFI
+```
+
+**Output available kernels**
+```sh
+grubby --info ALL
+```
+
+**Comment**
+```sh
+grubby --set-default <path to kernel>
+```
+
+**Last selected kernel becomes default**
+```sh
+vi /etc/default/grub
+add 
+    GRUB_DEFAULT=saved
+    GRUB_SAVEDEFAULT=true
 ```
 
 ## SSH
@@ -1294,11 +1659,120 @@ ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -C "comment"
 ssh-copy-id USER@192.168.1.120 -i .ssh/id_rsa.pub
 ```
 
+## NFS and autofs
+**Create a folder and share it using NFS**
+```sh
+(dnf install nfs-utils)         # Or whatever package manager you're using.
+mkdir -p /exports/<folder>
+vi /etc/exports -> /export/<folder>  <IP range/address to allow or just * to allow all>(rw,sync,no_root_squash)
+(systemctl enable --now nfs-server)
+(systemctl status nfs-server)
+showmount -e
+firewall-cmd --add-service nfs --permanent
+firewall-cmd --reload
+```
+
+**Mount a NFS share**
+```sh
+(dnf install nfs-utils)         # Or whatever package manager you're using.
+vi /etc/fstab -> <IP address or hostname of NFS server>:/exports/<folder>  /mnt/<folder>   nfs rw 0 0
+mount -a
+```
+
+**Set up autofs (direct) on client machine**
+```sh
+dnf install autofs
+vi /etc/auto.master --> add /- /etc/auto.direct
+vi auto.direct --> add /mnt/<server> -rw,soft <server>:/<share>
+systemctl enable --now autofs
+```
+
+**Set up autofs (indirect, in this case users home directories) on client machine**
+> Permissions are matched using the user's id. Create the folder on the source machine and change the ownership to a ID that matches the user accessing the share.
+```sh
+dnf install autofs
+vi /etc/auto.master --> add /mnt/home /etc/auto.home
+vi auto.home --> add * -rw,soft,timeo=5 <server>:/home/&
+systemctl enable --now autofs
+```
+
 ## Misc
 
-### Git
-**Revert last commit without removing any changes**
+### Snippets
+**Find process group id and set priority to minimum**
+```sh
+read processname; for x in $(pgrep $processname); do echo $x; renice -n 19 -p $x; done;
 ```
+
+**List only certain directories**
+```sh
+ls /etc/kubernetes/{pki,manifests}
+```
+
+**Read a file in a script - line by line**
+```sh
+while IFS= read -r x;
+do
+  echo $x
+done < <file>
+```
+
+**Case in script**
+```sh
+#!/bin/sh
+case "${1}" in
+    square)     echo "You specified 'square'." ;;
+    circle)     echo "You specified 'circle'." ;;
+    triangle)   echo "You specified 'triangle'." ;;
+    *)          echo "Unknown shape '${1}'."; exit 1 ;;
+esac
+```
+
+**Trim content with tr**
+```sh
+$x | tr "x,x,x,x" " "           # Replace characters with whitespace char.
+$x | tr -d "x,x,x,x"            # Delete characters
+```
+
+**Search for test in files and retur with matches (line by line)**
+```sh
+grep <search pattern> <file>
+grep -n <search pattern> <file>         # Show which rows
+```
+
+**Search for all files with are 3M big and copy it to certain folder**
+```sh
+find / -type -f -size 3M -exec cp -r {} <path> \;
+```
+
+**Search for all files in the specified folder (recursive)**
+```sh
+find <path> -iname <search pattern>       
+find . -iname <search pattern>          # Current folder
+```
+
+**Search for all files owned by a specific user in the specified folder (recursive)**
+```sh
+find <path> -iname <search pattern> --user <username or user ID>   
+```
+
+**Search for all files in the specified folder (not recursive)**
+```sh
+find <path> -maxdepth 1 -iname <search pattern>          # Only search within the specifed
+```
+
+### Git
+
+**Configure Git (local)**
+```sh
+Create a local config
+git config --local user.name "<nickname or fullname>"
+git config --local user.email "<email address>"
+git config --local core.sshCommand 'ssh -i ~/.ssh/<private key file>'
+```
+
+**Revert last commit without removing any changes**
+```sh
 git reset --soft HEAD~1
 
 OR
@@ -1307,7 +1781,7 @@ git reset --soft <hash of commit>
 ```
 
 **Revert last commit and changes made since last commit (POTENTIALLY DANGEROUS!)**
-```
+```sh
 git reset --hard HEAD~1
 
 OR
@@ -1316,32 +1790,32 @@ git reset --hard <hash of commit>
 ```
 
 **Remove unstaged files**
-```
+```sh
 git reset @
 ```
 
 **Add all changes to staged**
-```
+```sh
 git add *
 ```
 
 **Add all changed to staged including deleted files**
-```
+```sh
 git add --all .
 ```
 
 **Force push**
-```
+```sh
 git push --force
 ```
 
 **Change commit author**
-```
+```sh
 git commit --amend --reset-author
 ```
 
 **Commit with comment**
-```
+```sh
 git commit -m "Message"
 ```
 
@@ -1355,3 +1829,172 @@ git log --name-only
 ```
 :set list
 ```
+
+## Container
+
+**Search for a container image**
+```sh
+podman search <container name>
+```
+
+**Edit list of container registries**
+```sh
+vi /etc/containers/registries.conf                  # By changing order of registries, you can prioritize which one that should come first respective come last.
+```
+
+**Pull image**
+```sh
+podman pull <address to the image>
+```
+
+**Login to container registry**
+```sh
+podman login <url to registry>
+
+OR
+
+skopeo login <url to registry>
+```
+
+**Inspect container image**
+```sh
+podman pull <address to the image>
+podman inspect docker://<url to image> | less
+
+OR
+
+skopeo inspect docker://<url to image> | less
+
+
+podman inspect docker://<url to image> | grep -A2 Cmd           # List container entrypoint command
+```
+
+
+**List containers**
+```sh
+podman ps               # List running containers
+podman ps -a            # List all container
+```
+
+**List container images**
+```sh
+podman images
+```
+
+**Run a container**
+```sh
+podman run --name <container name> <image id or url>
+podman run --name <container name> -d -p <host port:container port> <image id or url> -e <environment variable>="<value>"
+podman run --name <container name> <image id or url>             # Run the container in background (detached)
+podman run -it --name <container name> <image id or url> <cmd>      # Run container interactively 
+```
+
+**Remove all containers**
+```sh
+podman rm -a
+podman rm -a -f          # Remove all container regardless of state.
+```
+
+**Start, stop or kill container**
+```sh
+podman start <container name or id>
+podman stop <container name or id>
+podman kill <container name or id>
+```
+
+**Execute commands interactively inside container**
+```sh
+podman exec -it <container name or id> <cmd>
+```
+
+**Expose container ports**
+```sh
+podman run
+```
+
+**Run a container with persistent storage**
+```sh
+mkdir <container persistent storage>
+podman run --name  -d -p 4080:8080 -v <path to dir:container path>
+podman run --name  -d -p 4080:8080 -v <path to dir:container path:z>
+podman run --name  -d -p 4080:8080 -v <path to dir:container path:Z>
+```
+
+**Create a container file/Docker file**
+```sh
+mkdir <container name>
+cd <folder name>
+vi container-file
+
+    FROM registry.redhat.io/ubi9/ubi-minimal:9.1.0
+
+    RUN microdnf install -y nginx
+
+    RUN rm -r /usr/share/nginx/html/*
+
+    COPY index.html /usr/share/nginx/html/
+
+    COPY startup.sh /
+
+    EXPOSE 80
+
+    CMD /startup.sh
+
+
+vi index.html
+
+    <h1>Hello!</h1>
+
+vi startup.sh
+
+    #!/bin/bash
+    
+    exec /usr/sbin/nginx -g "daemon off;"
+
+chmod +x startup.sh
+
+podman login
+
+podman build . -t <container image:release name>
+
+podman images
+
+podman run
+```
+
+**Enable docker container to start without user have been logged on**
+```sh
+loginctl show-user <user>
+sudo loginctl enable-linger <user>
+mkdir -p ~/.config/systemd/user
+cd ~/.config/systemd/user
+podman generate systemd --name <container name> --files --new 
+systemctl daemon-reload --user
+systemctl list-unit-files --no-pager --user | grep container-<container name>
+systemctl --user status container-<container name>
+systemctl --user start container-<container name>
+systemctl --user enable container-<container name> --now
+```
+
+
+
+
+docker compose logs -f <container name>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
