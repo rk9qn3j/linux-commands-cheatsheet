@@ -1761,9 +1761,21 @@ find <path> -iname <search pattern> --user <username or user ID>
 find <path> -maxdepth 1 -iname <search pattern>          # Only search within the specifed
 ```
 
+### OpenSSL
+
+**Generate CSR**
+```sh
+openssl req -new -newkey rsa:4096 -nodes -keyout <domain>.key -out <domain>.csr
+```
+
+**Generate self-signed certificate (valid for one year)**
+```sh
+openssl req -x509 -newkey rsa:4096 -keyout <domain>.key -out <domain>.crt -sha256 -days 365
+```
+
 ### Git
 
-**Configure Git (local)**
+**Configure Git (locally)**
 ```sh
 Create a local config
 git config --local user.name "<nickname or fullname>"
