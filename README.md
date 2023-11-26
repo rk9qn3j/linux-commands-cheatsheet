@@ -1761,6 +1761,11 @@ find <path> -iname <search pattern> --user <username or user ID>
 find <path> -maxdepth 1 -iname <search pattern>          # Only search within the specifed
 ```
 
+**DNS lookup with dig**
+```sh
+dig <domain name> <type> +noall +answer         # Only output the DNS records and their respective values
+```
+
 ### OpenSSL
 
 **Generate CSR**
