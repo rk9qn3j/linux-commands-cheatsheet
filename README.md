@@ -1766,6 +1766,11 @@ find <path> -maxdepth 1 -iname <search pattern>          # Only search within th
 dig <domain name> <type> +noall +answer         # Only output the DNS records and their respective values
 ```
 
+**Generate password**
+```sh
+cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 20              # Generates as password that contains a-zA-Z0-9 and with a length of 20 characters.
+```
+
 ### OpenSSL
 
 **Generate CSR**
